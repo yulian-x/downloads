@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KERNEL LEVEL — Guía de Instalación CODM</title>
+  <meta name="description" content="Guía completa de instalación de Call of Duty Mobile con certificado Kernel Level. Sin jailbreak.">
+  <link rel="icon" type="image/x-icon" href="logo.ico">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --purple:        #7A1FEE;
+      --purple-bright: #8B2FFF;
+      --purple-dim:    #5a0fcc;
+      --purple-glow:   rgba(122,31,238,0.6);
+      --neon-glow:     0 0 8px #7A1FEE, 0 0 20px #8B2FFF, 0 0 40px rgba(122,31,238,0.5);
+      --neon-card:     0 0 1px rgba(122,31,238,0.4), 0 8px 32px rgba(0,0,0,0.5);
+      --dark:          #06040f;
+      --dark2:         #0b0818;
+      --dark3:         #100c1e;
+      --card:          #0d0a1a;
+      --card2:         #120f22;
+      --text:          #ffffff;
+      --text-muted:    #999;
+      --border:        rgba(122,31,238,0.22);
+      --green:         #22c55e;
+      --yellow:        #f59e0b;
+      --red:           #ef4444;
+      --font-display:  'Orbitron', sans-serif;
+      --font-body:     'Rajdhani', sans-serif;
+      --font-alt:      'Exo 2', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--dark2); }
+    ::-webkit-scrollbar-thumb { background: var(--purple-dim); border-radius: 3px; }
+
+    /* BG */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(122,31,238,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,31,238,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .bg-orb {
+      position: fixed; border-radius: 50%;
+      filter: blur(120px); pointer-events: none; z-index: 0;
+    }
+    .bg-orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(122,31,238,0.12) 0%, transparent 70%);
+      top: -200px; left: -150px;
+    }
+    .bg-orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(139,47,255,0.08) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+    }
+
+    /* NAVBAR */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(6,4,15,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none;
+    }
+    .nav-logo img { width: 36px; height: 36px; object-fit: contain; }
+    .nav-logo-text {
+      font-family: var(--font-display);
+      font-size: 0.9rem; font-weight: 900;
+      letter-spacing: 4px; text-transform: uppercase;
+      color: #fff; text-shadow: var(--neon-glow);
+    }
+    .nav-logo-text span { color: var(--purple); }
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-link {
+      font-family: var(--font-alt); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: #fff; }
+    .nav-link.active { color: var(--purple); }
+    .nav-badge {
+      font-family: var(--font-alt);
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--purple); padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 2px; background: rgba(122,31,238,0.08);
+    }
+
+    /* WRAPPER */
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 860px; margin: 0 auto;
+      padding: 110px 20px 80px;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center; margin-bottom: 60px;
+      animation: fadeSlideDown 0.6s ease both;
+    }
+    .hero-tag {
+      display: inline-block;
+      font-family: var(--font-alt); font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: var(--purple); padding: 5px 14px;
+      border: 1px solid rgba(122,31,238,0.4);
+      border-radius: 2px; background: rgba(122,31,238,0.08);
+      margin-bottom: 20px;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 4.5vw, 2.8rem);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .hero-title .glow { color: var(--purple); text-shadow: var(--neon-glow); }
+    .hero-sub {
+      font-family: var(--font-alt); font-size: 1rem;
+      color: var(--text-muted); letter-spacing: 1px;
+      max-width: 500px; margin: 0 auto;
+    }
+
+    /* VERSION NOTICE */
+    .version-notice {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: rgba(245,158,11,0.07);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 10px; padding: 18px 22px;
+      margin-bottom: 48px;
+      animation: fadeSlideUp 0.5s 0.2s ease both;
+    }
+    .version-notice-icon {
+      width: 40px; height: 40px; flex-shrink: 0;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .version-notice-text { flex: 1; }
+    .version-notice-title {
+      font-family: var(--font-display); font-size: 0.72rem;
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--yellow); margin-bottom: 6px;
+    }
+    .version-notice-body {
+      font-family: var(--font-alt); font-size: 0.88rem;
+      color: rgba(255,255,255,0.6); line-height: 1.6;
+    }
+    .version-notice-body strong { color: var(--yellow); }
+
+    /* SECTION HEADER */
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px;
+    }
+    .section-num {
+      font-family: var(--font-display); font-size: 0.6rem; font-weight: 700;
+      color: var(--purple); letter-spacing: 2px;
+      border: 1px solid rgba(122,31,238,0.4);
+      padding: 4px 8px; border-radius: 3px;
+      background: rgba(122,31,238,0.08);
+      white-space: nowrap;
+    }
+    .section-title {
+      font-family: var(--font-display); font-size: 0.82rem;
+      font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      color: #fff;
+    }
+    .section-line {
+      flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* DOWNLOAD CARDS */
+    .download-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; margin-bottom: 14px;
+    }
+    @media(max-width:580px){ .download-grid { grid-template-columns: 1fr; } }
+
+    .dl-card {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
+      text-decoration: none;
+      transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+      cursor: pointer;
+    }
+    .dl-card:hover {
+      border-color: var(--purple);
+      box-shadow: 0 0 20px rgba(122,31,238,0.2);
+      transform: translateY(-2px);
+    }
+    .dl-card-icon {
+      width: 42px; height: 42px; flex-shrink: 0;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dl-card-icon.purple { background: rgba(122,31,238,0.15); border: 1px solid rgba(122,31,238,0.3); }
+    .dl-card-icon.green  { background: rgba(34,197,94,0.1);   border: 1px solid rgba(34,197,94,0.25); }
+    .dl-card-icon.blue   { background: rgba(59,130,246,0.1);  border: 1px solid rgba(59,130,246,0.25); }
+    .dl-card-info { flex: 1; min-width: 0; }
+    .dl-card-name {
+      font-family: var(--font-alt); font-size: 0.88rem; font-weight: 700;
+      color: #fff; margin-bottom: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dl-card-type {
+      font-family: var(--font-alt); font-size: 0.72rem;
+      color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase;
+    }
+    .dl-arrow {
+      color: rgba(122,31,238,0.5); flex-shrink: 0;
+      transition: transform 0.2s, color 0.2s;
+    }
+    .dl-card:hover .dl-arrow { transform: translateX(3px); color: var(--purple); }
+
+    .pwd-box {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(122,31,238,0.05);
+      border: 1px solid rgba(122,31,238,0.18);
+      border-radius: 8px; padding: 14px 18px;
+      margin-top: 6px;
+    }
+    .pwd-label {
+      font-family: var(--font-alt); font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-muted); white-space: nowrap;
+    }
+    .pwd-value {
+      font-family: 'Courier New', monospace; font-size: 0.92rem;
+      color: var(--purple); letter-spacing: 1px; font-weight: 700;
+    }
+    .copy-btn {
+      margin-left: auto; background: rgba(122,31,238,0.15);
+      border: 1px solid rgba(122,31,238,0.3); border-radius: 5px;
+      color: var(--purple); padding: 5px 12px;
+      font-family: var(--font-alt); font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .copy-btn:hover { background: rgba(122,31,238,0.3); color: #fff; }
+    .copy-btn.copied { color: var(--green); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+
+    /* GUIDE SECTION */
+    .guide-section {
+      margin-bottom: 52px;
+      animation: fadeSlideUp 0.5s ease both;
+    }
+
+    /* STEP CARDS */
+    .step-card {
+      display: flex; gap: 0;
+      margin-bottom: 4px;
+      position: relative;
+    }
+    .step-left {
+      display: flex; flex-direction: column; align-items: center;
+      width: 56px; flex-shrink: 0; padding-top: 18px;
+    }
+    .step-bubble {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 0.65rem; font-weight: 700;
+      border: 1.5px solid var(--border);
+      color: var(--purple); background: rgba(122,31,238,0.1);
+      position: relative; z-index: 1;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      flex-shrink: 0;
+    }
+    .step-card:hover .step-bubble {
+      border-color: var(--purple);
+      box-shadow: 0 0 16px rgba(122,31,238,0.4);
+    }
+    .step-connector {
+      width: 1px; flex: 1;
+      background: var(--border);
+      margin-top: 6px; min-height: 20px;
+    }
+    .step-card:last-child .step-connector { display: none; }
+
+    .step-body {
+      flex: 1; padding: 14px 0 28px 6px;
+    }
+    .step-title {
+      font-family: var(--font-display); font-size: 0.72rem;
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: #fff; margin-bottom: 10px;
+    }
+    .step-desc {
+      font-family: var(--font-alt); font-size: 0.92rem;
+      color: rgba(255,255,255,0.65); line-height: 1.7;
+    }
+    .step-desc strong { color: #fff; }
+    .step-desc .highlight { color: var(--purple); font-weight: 700; }
+    .step-desc .path {
+      display: inline-block;
+      font-family: 'Courier New', monospace; font-size: 0.82rem;
+      color: var(--purple-bright); background: rgba(122,31,238,0.1);
+      padding: 1px 7px; border-radius: 4px;
+      border: 1px solid rgba(122,31,238,0.2);
+    }
+
+    /* WARNING / TIP BOXES */
+    .tip-box {
+      display: flex; align-items: flex-start; gap: 12px;
+      border-radius: 8px; padding: 14px 16px;
+      margin: 14px 0;
+    }
+    .tip-box.warn {
+      background: rgba(245,158,11,0.06);
+      border: 1px solid rgba(245,158,11,0.25);
+    }
+    .tip-box.info {
+      background: rgba(122,31,238,0.06);
+      border: 1px solid rgba(122,31,238,0.2);
+    }
+    .tip-box.success {
+      background: rgba(34,197,94,0.06);
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .tip-icon { flex-shrink: 0; margin-top: 1px; }
+    .tip-text {
+      font-family: var(--font-alt); font-size: 0.87rem;
+      line-height: 1.6;
+    }
+    .tip-box.warn  .tip-text { color: rgba(245,158,11,0.85); }
+    .tip-box.info  .tip-text { color: rgba(255,255,255,0.6); }
+    .tip-box.success .tip-text { color: rgba(34,197,94,0.85); }
+
+    /* CONFIRM DIALOG MOCKUP */
+    .dialog-mockup {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 20px 22px;
+      margin: 14px 0;
+      max-width: 340px;
+    }
+    .dialog-title {
+      font-family: var(--font-body); font-size: 1rem; font-weight: 700;
+      color: #fff; text-align: center; margin-bottom: 6px;
+    }
+    .dialog-body {
+      font-family: var(--font-alt); font-size: 0.8rem;
+      color: rgba(255,255,255,0.45); text-align: center;
+      line-height: 1.6; margin-bottom: 16px;
+    }
+    .dialog-btns { display: flex; flex-direction: column; gap: 8px; }
+    .dialog-btn {
+      width: 100%; padding: 10px;
+      border-radius: 8px; border: none;
+      font-family: var(--font-alt); font-size: 0.85rem; font-weight: 700;
+      cursor: default; letter-spacing: 0.5px;
+    }
+    .dialog-btn.primary {
+      background: rgba(0,122,255,0.18); color: #3b9fff;
+      border: 1px solid rgba(0,122,255,0.25);
+    }
+    .dialog-btn.secondary {
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.35);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* CTA BOTTOM */
+    .cta-bottom {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 16px; text-align: center;
+      padding: 48px 20px;
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+    .cta-tag {
+      font-family: var(--font-alt); font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: var(--green); padding: 4px 14px;
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 2px; background: rgba(34,197,94,0.06);
+    }
+    .cta-title {
+      font-family: var(--font-display); font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 900; letter-spacing: 3px; text-transform: uppercase;
+    }
+    .cta-title span { color: var(--purple); text-shadow: var(--neon-glow); }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 15px 36px;
+      background: linear-gradient(135deg, var(--purple-dim), var(--purple-bright));
+      border: none; border-radius: 7px;
+      color: #fff; font-family: var(--font-display);
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      text-decoration: none; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 20px rgba(122,31,238,0.3);
+    }
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 30px rgba(122,31,238,0.5);
+    }
+
+    /* PROGRESS TRACKER */
+    .progress-tracker {
+      position: fixed; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 50;
+    }
+    .pt-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border); border: 1px solid rgba(122,31,238,0.3);
+      cursor: pointer; transition: all 0.3s;
+    }
+    .pt-dot.active {
+      background: var(--purple);
+      box-shadow: 0 0 8px rgba(122,31,238,0.6);
+    }
+    @media(max-width:900px){ .progress-tracker { display: none; } }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 24px 20px;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-alt); font-size: 0.75rem;
+      color: rgba(255,255,255,0.2); letter-spacing: 1px;
+    }
+    footer a { color: var(--purple); text-decoration: none; }
+
+    /* ANIMATIONS */
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .guide-section:nth-child(1) { animation-delay: 0.1s; }
+    .guide-section:nth-child(2) { animation-delay: 0.2s; }
+    .guide-section:nth-child(3) { animation-delay: 0.3s; }
+    .guide-section:nth-child(4) { animation-delay: 0.4s; }
+    .guide-section:nth-child(5) { animation-delay: 0.5s; }
+
+    /* MOBILE */
+    @media(max-width:600px){
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      .wrapper { padding: 90px 16px 60px; }
+    }
+
+    /* SVG ICON HELPER */
+    .svg-icon { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="logo.png" alt="Kernel Level">
+    <span class="nav-logo-text">KERNEL <span>LEVEL</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Instalador</a>
+    <a href="guide.html" class="nav-link active">Guía</a>
+  </div>
+  <span class="nav-badge">iOS 17+</span>
+</nav>
+
+<!-- PROGRESS TRACKER -->
+<div class="progress-tracker" id="progressTracker">
+  <div class="pt-dot active" onclick="scrollToSection(0)" title="Requerimientos"></div>
+  <div class="pt-dot" onclick="scrollToSection(1)" title="Instalar ESign"></div>
+  <div class="pt-dot" onclick="scrollToSection(2)" title="Confiar Certificado"></div>
+  <div class="pt-dot" onclick="scrollToSection(3)" title="Importar Certificado"></div>
+  <div class="pt-dot" onclick="scrollToSection(4)" title="Firmar CODM"></div>
+  <div class="pt-dot" onclick="scrollToSection(5)" title="Instalar y Jugar"></div>
+</div>
+
+<div class="wrapper">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Guía de Instalación</div>
+    <h1 class="hero-title">Call of Duty Mobile<br><span class="glow">Kernel Level</span></h1>
+    <p class="hero-sub">Proceso completo paso a paso. Sin jailbreak. Sin complicaciones.</p>
+  </div>
+
+  <!-- VERSION NOTICE -->
+  <div class="version-notice">
+    <div class="version-notice-icon">
+      <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div class="version-notice-text">
+      <div class="version-notice-title">Compatibilidad de versión</div>
+      <div class="version-notice-body">
+        Esta guía es exclusivamente para <strong>iOS 17 en adelante</strong>. Si tienes
+        <strong>iOS 16.7.2 o inferior</strong>, contacta al soporte para recibir una instalación personalizada
+        para tu versión de sistema operativo.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ -->
+  <!-- SECCIÓN 1: REQUERIMIENTOS  -->
+  <!-- ═══════════════════════════ -->
+  <div class="guide-section" id="section-0">
+    <div class="section-header">
+      <span class="section-num">PASO 01</span>
+      <span class="section-title">Descarga de Requerimientos</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left">
+        <div class="step-bubble">01</div>
+        <div class="step-connector"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-title">Descarga los archivos en tu iPhone o iPad</div>
+        <div class="step-desc">
+          Descarga todos los archivos directamente desde tu dispositivo iOS y asegúrate de guardarlos
+          en la <span class="path">Carpeta de Descargas</span>. Esto facilitará encontrarlos más adelante en ESign.
+        </div>
+        <div style="margin-top:16px">
+          <div style="font-family:var(--font-alt);font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">
+            Certificado Kernel Level
+          </div>
+          <div class="download-grid">
+            <a class="dl-card" href="https://github.com/yulian-x/downloads/raw/refs/heads/main/Kernel%20Level.p12" target="_blank">
+              <div class="dl-card-icon purple">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A1FEE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+              <div class="dl-card-info">
+                <div class="dl-card-name">Kernel Level.p12</div>
+                <div class="dl-card-type">Certificado</div>
+              </div>
+              <svg class="dl-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a class="dl-card" href="https://github.com/yulian-x/downloads/raw/refs/heads/main/Kernel%20Level.mobileprovision" target="_blank">
+              <div class="dl-card-icon purple">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A1FEE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="dl-card-info">
+                <div class="dl-card-name">Kernel Level.mobileprovision</div>
+                <div class="dl-card-type">Provisioning Profile</div>
+              </div>
+              <svg class="dl-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+          <div style="font-family:var(--font-alt);font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 10px">
+            Call of Duty Mobile IPA
+          </div>
+          <a class="dl-card" href="https://drive.google.com/file/d/1U_SUXTOnyKjGg5_VC3WJ6lqlVICpc6cI/view?usp=sharing" target="_blank" style="margin-bottom:0">
+            <div class="dl-card-icon green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <div class="dl-card-info">
+              <div class="dl-card-name">Call of Duty Mobile.ipa</div>
+              <div class="dl-card-type">Google Drive · IPA Firmable</div>
+            </div>
+            <svg class="dl-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <div class="pwd-box" style="margin-top:12px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span class="pwd-label">Contraseña</span>
+            <span class="pwd-value" id="pwdText">AppleP12.com</span>
+            <button class="copy-btn" onclick="copyPwd()">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box info" style="margin-left:56px">
+      <svg class="tip-icon svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A1FEE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span class="tip-text">Guarda todos los archivos en la <strong style="color:#fff">Carpeta de Descargas</strong> de tu dispositivo para encontrarlos fácilmente desde ESign.</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ -->
+  <!-- SECCIÓN 2: INSTALAR ESIGN  -->
+  <!-- ═══════════════════════════ -->
+  <div class="guide-section" id="section-1">
+    <div class="section-header">
+      <span class="section-num">PASO 02</span>
+      <span class="section-title">Instalación de ESign</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left">
+        <div class="step-bubble">01</div>
+        <div class="step-connector"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-title">Instala ESign desde nuestro instalador</div>
+        <div class="step-desc">
+          Utiliza el <strong>Instalador Kernel Level</strong> para firmar e instalar ESign en tu dispositivo.
+          Una vez descargado el IPA, el proceso de firma es automático desde nuestra plataforma.
+        </div>
+        <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 20px;background:rgba(122,31,238,0.15);border:1px solid rgba(122,31,238,0.35);border-radius:6px;color:var(--purple);font-family:var(--font-alt);font-size:0.8rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(122,31,238,0.3)';this.style.color='#fff'" onmouseout="this.style.background='rgba(122,31,238,0.15)';this.style.color='var(--purple)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Ir al Instalador
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- SECCIÓN 3: CONFIAR CERTIFICADO    -->
+  <!-- ══════════════════════════════════ -->
+  <div class="guide-section" id="section-2">
+    <div class="section-header">
+      <span class="section-num">PASO 03</span>
+      <span class="section-title">Confiar en el Certificado</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">01</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Abre la configuración del dispositivo</div>
+        <div class="step-desc">
+          Ve a <span class="path">Configuración</span> → <span class="path">General</span> → <span class="path">Administración de dispositivos y VPN</span>.
+          Busca la entrada que aparece bajo <strong>App Empresarial</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">02</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Selecciona el perfil del certificado</div>
+        <div class="step-desc">
+          Toca el nombre del certificado que instalaste — puede aparecer como
+          <strong>XL AXIATA, PT TBK</strong> u otro nombre dependiendo del certificado activo.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">03</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Confirma la confianza en el desarrollador</div>
+        <div class="step-desc">
+          Toca <strong>"Confiar en [nombre del certificado]"</strong> y luego confirma en el aviso que aparece.
+          Tu dispositivo te mostrará una pantalla similar a esta:
+        </div>
+        <div class="dialog-mockup">
+          <div class="dialog-title">¿Permitir apps de<br>"XL AXIATA, PT TBK"?</div>
+          <div class="dialog-body">Permitir que cualquier app de este desarrollador se abra en tu iPhone o iPad y acceda a tus datos.</div>
+          <div class="dialog-btns">
+            <button class="dialog-btn primary">Permitir y reiniciar</button>
+            <button class="dialog-btn secondary">No permitir</button>
+          </div>
+        </div>
+        <div class="tip-box warn" style="margin-top:10px">
+          <svg class="tip-icon svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="tip-text">Toca <strong>"Permitir y reiniciar"</strong>. El dispositivo se reiniciará automáticamente — esto es normal y esperado.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">04</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Instala el perfil tras el reinicio</div>
+        <div class="step-desc">
+          Después del reinicio aparecerá el mensaje <strong>"Ya puedes instalar el perfil"</strong>.
+          Toca <strong>"Presiona inicio para continuar"</strong>, luego <strong>"Instalar este perfil"</strong>.
+          Si tu dispositivo tiene contraseña, introdúcela cuando se solicite.
+          El dispositivo se reiniciará una vez más para completar la instalación.
+        </div>
+        <div class="tip-box success" style="margin-top:10px">
+          <svg class="tip-icon svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="tip-text">Tras el segundo reinicio, ESign abrirá sin restricciones. El certificado quedará correctamente instalado.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- SECCIÓN 4: IMPORTAR CERTIFICADO   -->
+  <!-- ══════════════════════════════════ -->
+  <div class="guide-section" id="section-3">
+    <div class="section-header">
+      <span class="section-num">PASO 04</span>
+      <span class="section-title">Importar el Certificado en ESign</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">01</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Abre ESign y acepta los términos</div>
+        <div class="step-desc">
+          Al abrir ESign toca <strong>OK</strong>. Luego toca <strong>Agree</strong> en la esquina superior derecha y
+          confirma nuevamente con <strong>Agree</strong>. Ahora estás dentro de ESign.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">02</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Importa el .p12 y el .mobileprovision</div>
+        <div class="step-desc">
+          Toca los <strong>3 puntos</strong> en la esquina superior derecha → <strong>Import</strong>.
+          Navega hasta la <span class="path">Carpeta de Descargas</span> y selecciona
+          <strong>Kernel Level.p12</strong>. Repite el proceso para <strong>Kernel Level.mobileprovision</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">03</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Activa el certificado con la contraseña</div>
+        <div class="step-desc">
+          En ESign verás los dos archivos importados. Toca el <strong>.p12</strong> →
+          <strong>"Import Certificate Management"</strong>. Cuando se solicite la contraseña, introduce:
+        </div>
+        <div class="pwd-box" style="margin-top:10px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span class="pwd-label">Contraseña</span>
+          <span class="pwd-value">AppleP12.com</span>
+          <button class="copy-btn" onclick="copyPwd()">Copiar</button>
+        </div>
+        <div class="tip-box success" style="margin-top:12px">
+          <svg class="tip-icon svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="tip-text">El certificado Kernel Level quedará activo en ESign y listo para firmar cualquier IPA.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- SECCIÓN 5: FIRMAR CODM            -->
+  <!-- ══════════════════════════════════ -->
+  <div class="guide-section" id="section-4">
+    <div class="section-header">
+      <span class="section-num">PASO 05</span>
+      <span class="section-title">Importar y Firmar CODM</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">01</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Importa el IPA de Call of Duty Mobile</div>
+        <div class="step-desc">
+          Toca los <strong>3 puntos</strong> → <strong>Import</strong>. Busca y selecciona el
+          <strong>IPA de CODM</strong> que descargaste en el Paso 01. ESign lo importará al apartado
+          <span class="path">Apps</span> (icono inferior de la barra de navegación).
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">02</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Abre el menú de firma</div>
+        <div class="step-desc">
+          Ve al apartado <span class="path">Apps</span> en la barra inferior. Toca el juego y selecciona
+          <strong>"Signature"</strong>. Luego toca <strong>"More Settings"</strong> para acceder a la configuración avanzada.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">03</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Configura las opciones de firma</div>
+        <div class="step-desc">
+          En <strong>More Settings</strong> puedes personalizar el nombre e ícono de la app para ocultarla
+          (recomendado si juegas en modo competitivo).
+        </div>
+        <div class="tip-box warn" style="margin-top:10px">
+          <svg class="tip-icon svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="tip-text"><strong>No modifiques el Bundle Identifier</strong> a menos que necesites coexistir con la versión oficial de la App Store. Cambiarlo incorrectamente puede causar problemas de seguridad.</span>
+        </div>
+        <div class="step-desc" style="margin-top:12px">
+          Baja hasta el final de las opciones y activa la penúltima opción:
+          <strong>"Remove mobileprovision after signing"</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">04</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Inicia el proceso de firma</div>
+        <div class="step-desc">
+          Toca <strong>"Signature"</strong> para comenzar. ESign firmará el juego con tu certificado.
+          Al terminar, aparecerán dos botones en la parte inferior: <strong>Install</strong> y <strong>Exit</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- SECCIÓN 6: INSTALAR Y JUGAR       -->
+  <!-- ══════════════════════════════════ -->
+  <div class="guide-section" id="section-5">
+    <div class="section-header">
+      <span class="section-num">PASO 06</span>
+      <span class="section-title">Instalar y Activar</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">01</div><div class="step-connector"></div></div>
+      <div class="step-body">
+        <div class="step-title">Instala el juego firmado</div>
+        <div class="step-desc">
+          Toca <strong>Install</strong>. Aparecerá un aviso de confirmación en pantalla — toca
+          <strong>Instalar</strong> para confirmar. El juego comenzará a instalarse en tu dispositivo.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-left"><div class="step-bubble">02</div></div>
+      <div class="step-body">
+        <div class="step-title">Ingresa tu llave y disfruta</div>
+        <div class="step-desc">
+          Al abrir el juego por primera vez, se te solicitará tu <strong>llave de activación</strong>.
+          Ingrésala y listo — ya puedes disfrutar de Call of Duty Mobile con Kernel Level.
+        </div>
+        <div class="tip-box success" style="margin-top:12px">
+          <svg class="tip-icon svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="tip-text"><strong>¡Instalación completa!</strong> Si tienes algún problema durante el proceso, contacta al soporte en Discord.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA BOTTOM -->
+  <div class="cta-bottom">
+    <span class="cta-tag">Listo para empezar</span>
+    <h2 class="cta-title">¿Ya tienes tus archivos?<br>Úsalos en el <span>instalador</span></h2>
+    <a href="index.html" class="cta-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Ir al Instalador
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  <span>© 2025 KERNEL LEVEL — </span>
+  <a href="index.html">Instalador</a>
+  <span> · </span>
+  <a href="guide.html">Guía</a>
+</footer>
+
+<script>
+  // COPY PASSWORD
+  function copyPwd() {
+    navigator.clipboard.writeText('AppleP12.com').then(() => {
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.textContent = '✓ Copiado';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copiar';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  }
+
+  // PROGRESS TRACKER
+  const sections = ['section-0','section-1','section-2','section-3','section-4','section-5'];
+  const dots = document.querySelectorAll('.pt-dot');
+
+  function scrollToSection(i) {
+    document.getElementById(sections[i])?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = sections.indexOf(entry.target.id);
+        if (idx >= 0) {
+          dots.forEach(d => d.classList.remove('active'));
+          dots[idx]?.classList.add('active');
+        }
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+</script>
+</body>
+</html>
