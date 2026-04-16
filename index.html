@@ -18,12 +18,12 @@
     // 🔥 REEMPLAZA CON TU CONFIG DE FIREBASE
     // ═══════════════════════════════════════════
     const firebaseConfig = {
-      apiKey: "AIzaSyBGbTWKjJZY2ifGFHrFf9LDI3Xo5gcu3Gc",                          // ← pega tu apiKey aquí
+      apiKey: "AIzaSyBGbTWKjJZY2ifGFHrFf9LDI3Xo5gcu3Gc",
       authDomain: "kernel-level-sign.firebaseapp.com",
       projectId: "kernel-level-sign",
-      storageBucket: "kernel-level-sign.appspot.com",
+      storageBucket: "kernel-level-sign.firebasestorage.app",
       messagingSenderId: "551238890904",
-      appId: "1:551238890904:web:4e1d52b6954991533a67ed"                             // ← pega tu appId aquí
+      appId: "1:551238890904:web:4e1d52b6954991533a67ed"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -692,7 +692,7 @@
       </span>
       iOS Kernel Signing
     </div>
-    <h1 class="hero-title">Firma a <span class="glow">Kernel Level</span><br>en tu iPhone o iPad</h1>
+    <h1 class="hero-title">Firma a <span class="glow">Kernel Level</span><br>tu iPhone</h1>
     <p class="hero-sub">Sin jailbreak · Con tu certificado · Instalación directa</p>
   </div>
 
@@ -926,7 +926,7 @@
         <div class="cert-row">
           <div class="cert-key">Estado Cert.</div>
           <div class="cert-val">
-            <span class="badge-good"><span class="badge-dot"></span> Good</span>
+            <span class="badge-good"><span class="badge-dot"></span> good</span>
           </div>
         </div>
         <div class="cert-row">
@@ -936,7 +936,7 @@
         <div class="cert-row">
           <div class="cert-key">Estado Prov.</div>
           <div class="cert-val">
-            <span class="badge-good"><span class="badge-dot"></span> Good</span>
+            <span class="badge-good"><span class="badge-dot"></span> good</span>
           </div>
         </div>
         <div class="cert-row">
@@ -973,7 +973,7 @@
 
 // ── CONFIG ──────────────────────────────────────────────────
 // URL raw de tu IPA en GitHub (rama main, archivo esign.ipa)
-const IPA_URL = 'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/esign.ipa';
+const IPA_URL = 'https://github.com/yulian-x/downloads/raw/bdf5f9d6248c2c56d063060338efab54470cd009/esign.ipa';
 
 // Tu dominio de Netlify (o dominio propio)
 const SITE_URL = 'https://TU_SITIO.netlify.app';
@@ -1070,7 +1070,7 @@ async function startSigning() {
 
   // STEP 2 – Upload
   setStep(2);
-  animateProgress(90);
+  animateProgress(30);
 
   try {
     const fb = window.__fb;
@@ -1086,6 +1086,8 @@ async function startSigning() {
       fb.uploadBytes(p12Ref, p12File),
       fb.uploadBytes(mobRef, mobFile)
     ]);
+
+    animateProgress(70);
 
     const p12Url  = await fb.getDownloadURL(p12Ref);
     const mobUrl  = await fb.getDownloadURL(mobRef);
