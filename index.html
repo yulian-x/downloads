@@ -8,14 +8,13 @@
   <link rel="icon" type="image/x-icon" href="logo.ico">
   <link rel="apple-touch-icon" href="logo.png">
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (solo Firestore) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     // ═══════════════════════════════════════════
-    // 🔥 REEMPLAZA CON TU CONFIG DE FIREBASE
+    // 🔥 FIREBASE CONFIG (solo Firestore)
     // ═══════════════════════════════════════════
     const firebaseConfig = {
       apiKey: "AIzaSyBGbTWKjJZY2ifGFHrFf9LDI3Xo5gcu3Gc",
@@ -28,10 +27,38 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
-    // Exponer al scope global para uso en Vue
-    window.__fb = { db, storage, collection, addDoc, ref, uploadBytes, getDownloadURL, doc, updateDoc };
+    // Exponer Firestore al scope global
+    window.__fb = { db, collection, addDoc, doc, updateDoc };
+  </script>
+
+  <!-- Supabase SDK (Storage) -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    // ═══════════════════════════════════════════
+    // ⚡ SUPABASE CONFIG (Storage)
+    // ═══════════════════════════════════════════
+    const SUPABASE_URL  = 'https://nduaytxcttavhngwpfpf.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kdWF5dHhjdHRhdmhuZ3dwZnBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzODc4MzQsImV4cCI6MjA4NDk2MzgzNH0.bMNSjTm1m99IIs3pu85pW_C9orJ8nxxpVcgOxUtjOhI';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // Helper: subir archivo al bucket 'jobs' y devolver URL pública
+    async function supabaseUpload(path, file) {
+      const { data, error } = await supabase.storage
+        .from('jobs')
+        .upload(path, file, { upsert: true });
+      if (error) throw new Error('Supabase upload error: ' + error.message);
+
+      const { data: urlData } = supabase.storage
+        .from('jobs')
+        .getPublicUrl(path);
+      return urlData.publicUrl;
+    }
+
+    // Exponer al scope global
+    window.__supa = { supabase, supabaseUpload };
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -986,7 +1013,7 @@
 
 // ── CONFIG ──────────────────────────────────────────────────
 // URL raw de tu IPA en GitHub (rama main, archivo esign.ipa)
-const IPA_URL = 'https://github.com/yulian-x/downloads/raw/refs/heads/main/esign.ipa';
+const IPA_URL = 'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/esign.ipa';
 
 // Tu dominio de Netlify (o dominio propio)
 const SITE_URL = 'https://TU_SITIO.netlify.app';
@@ -1224,24 +1251,20 @@ async function startSigning() {
   animateProgress(30);
 
   try {
-    const fb = window.__fb;
-    if (!fb) throw new Error('Firebase no inicializado. Revisa tu config en el HTML.');
+    const fb   = window.__fb;
+    const supa = window.__supa;
+    if (!fb)   throw new Error('Firebase no inicializado.');
+    if (!supa) throw new Error('Supabase no inicializado.');
 
-    // Subir archivos a Firebase Storage
+    // Subir archivos a Supabase Storage
     const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
-    const p12Ref  = fb.ref(fb.storage, `jobs/${jobId}/cert.p12`);
-    const mobRef  = fb.ref(fb.storage, `jobs/${jobId}/profile.mobileprovision`);
-
-    await Promise.all([
-      fb.uploadBytes(p12Ref, p12File),
-      fb.uploadBytes(mobRef, mobFile)
+    const [p12Url, mobUrl] = await Promise.all([
+      supa.supabaseUpload(`${jobId}/cert.p12`, p12File),
+      supa.supabaseUpload(`${jobId}/profile.mobileprovision`, mobFile)
     ]);
 
     animateProgress(70);
-
-    const p12Url  = await fb.getDownloadURL(p12Ref);
-    const mobUrl  = await fb.getDownloadURL(mobRef);
 
     // Guardar job en Firestore
     await fb.addDoc(fb.collection(fb.db, 'sign_jobs'), {
@@ -1345,14 +1368,12 @@ function showInstall(signedIpaUrl, jobId) {
 </dict>
 </plist>`;
 
-  // El plist debe ser servido desde HTTPS — guardamos en Firebase Storage
-  const fb = window.__fb;
+  // Subir plist a Supabase Storage
+  const supa = window.__supa;
   const plistBlob = new Blob([plistContent], { type: 'application/xml' });
-  const plistRef  = fb.ref(fb.storage, `jobs/${jobId}/install.plist`);
+  const plistFile = new File([plistBlob], 'install.plist', { type: 'application/xml' });
 
-  fb.uploadBytes(plistRef, plistBlob).then(() => {
-    return fb.getDownloadURL(plistRef);
-  }).then(plistUrl => {
+  supa.supabaseUpload(`${jobId}/install.plist`, plistFile).then(plistUrl => {
     const installUrl = 'itms-services://?action=download-manifest&url=' + encodeURIComponent(plistUrl);
     document.getElementById('installLink').href = installUrl;
 
