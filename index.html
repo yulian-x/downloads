@@ -600,6 +600,13 @@
       padding: 2px 8px; font-size: 0.72rem; font-weight: 700;
       letter-spacing: 1px;
     }
+    .badge-bad {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+      color: #ef4444; border-radius: 4px;
+      padding: 2px 8px; font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 1px;
+    }
     .badge-dot {
       width: 6px; height: 6px; border-radius: 50%;
       background: #22c55e;
@@ -921,13 +928,17 @@
         </div>
         <div class="cert-row">
           <div class="cert-key">Tipo Cert.</div>
-          <div class="cert-val">In-House</div>
+          <div class="cert-val" id="modalCertType">In-House</div>
         </div>
         <div class="cert-row">
           <div class="cert-key">Estado Cert.</div>
           <div class="cert-val">
-            <span class="badge-good"><span class="badge-dot"></span> good</span>
+            <span id="modalCertEstado" class="badge-good"><span class="badge-dot"></span> Good</span>
           </div>
+        </div>
+        <div class="cert-row">
+          <div class="cert-key">Expira</div>
+          <div class="cert-val" id="modalExpiry">—</div>
         </div>
         <div class="cert-row">
           <div class="cert-key">Provisioning</div>
@@ -936,12 +947,12 @@
         <div class="cert-row">
           <div class="cert-key">Estado Prov.</div>
           <div class="cert-val">
-            <span class="badge-good"><span class="badge-dot"></span> good</span>
+            <span id="modalProvEstado" class="badge-good"><span class="badge-dot"></span> Good</span>
           </div>
         </div>
         <div class="cert-row">
           <div class="cert-key">Tipo Prov.</div>
-          <div class="cert-val">In-House</div>
+          <div class="cert-val" id="modalProvType">In-House</div>
         </div>
       </div>
       <div class="modal-notice">
@@ -963,6 +974,8 @@
   © 2025 <a href="https://kernelevel.netlify.app" target="_blank">Kernel Level</a> — All rights reserved
 </footer>
 
+<!-- node-forge (parseo real de certificados P12) -->
+<script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
 <!-- QRCode library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
@@ -973,7 +986,7 @@
 
 // ── CONFIG ──────────────────────────────────────────────────
 // URL raw de tu IPA en GitHub (rama main, archivo esign.ipa)
-const IPA_URL = 'https://github.com/yulian-x/downloads/raw/bdf5f9d6248c2c56d063060338efab54470cd009/esign.ipa';
+const IPA_URL = 'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/esign.ipa';
 
 // Tu dominio de Netlify (o dominio propio)
 const SITE_URL = 'https://TU_SITIO.netlify.app';
@@ -1031,17 +1044,155 @@ function animateProgress(targetPct, onDone) {
 }
 
 // ── CERT MODAL ──────────────────────────────────────────────
-function showCertModal() {
+
+// Lee un File y devuelve ArrayBuffer
+function readFileAsArrayBuffer(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error('No se pudo leer el archivo'));
+    r.readAsArrayBuffer(file);
+  });
+}
+
+// Parsea el .p12 con node-forge — lanza error si la contraseña está mal
+async function parseP12(file, password) {
+  const buf = await readFileAsArrayBuffer(file);
+  const binary = String.fromCharCode(...new Uint8Array(buf));
+  const der = forge.util.createBuffer(binary, 'raw');
+  const asn1 = forge.asn1.fromDer(der);
+  // Esto lanza excepción si la contraseña es incorrecta
+  const p12 = forge.pkcs12.pkcs12FromAsn1(asn1, password);
+
+  let commonName = null;
+  let notAfter   = null;
+  let certType   = 'In-House';
+
+  // Buscar el certificado dentro del P12
+  const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
+  const bags = certBags[forge.pki.oids.certBag] || [];
+  for (const bag of bags) {
+    const cert = bag.cert;
+    if (!cert) continue;
+    // Common Name del sujeto
+    const cnAttr = cert.subject.getField('CN');
+    if (cnAttr) commonName = cnAttr.value;
+    notAfter = cert.validity.notAfter;
+
+    // Detectar tipo según extensiones del certificado
+    const extKeyUsage = cert.getExtension('extKeyUsage');
+    if (extKeyUsage) {
+      if (extKeyUsage.value && extKeyUsage.value.includes('1.2.840.113635.100.4.4')) {
+        certType = 'In-House';
+      } else if (extKeyUsage.value && extKeyUsage.value.includes('1.2.840.113635.100.4.9')) {
+        certType = 'Ad-Hoc';
+      }
+    }
+    break;
+  }
+
+  const now = new Date();
+  const expired = notAfter && notAfter < now;
+  const estado = expired ? 'Expired' : 'Good';
+
+  return { commonName, notAfter, certType, estado };
+}
+
+// Parsea el .mobileprovision — es un CMS con XML dentro
+async function parseMobileProvision(file) {
+  const buf = await readFileAsArrayBuffer(file);
+  const text = new TextDecoder('utf-8').decode(buf);
+  // Extraer el XML embebido (entre <?xml ... </plist>)
+  const xmlMatch = text.match(/<\?xml[\s\S]*?<\/plist>/);
+  if (!xmlMatch) return { provType: 'In-House', estado: 'Good', appName: null, bundleId: null };
+
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlMatch[0], 'text/xml');
+
+  function getPlistValue(key) {
+    const keys = xmlDoc.querySelectorAll('key');
+    for (const k of keys) {
+      if (k.textContent.trim() === key) {
+        const next = k.nextElementSibling;
+        if (next) return next.textContent.trim();
+      }
+    }
+    return null;
+  }
+
+  // Tipo de provisioning
+  const getTaskAllow   = getPlistValue('get-task-allow');
+  const provisionType  = getPlistValue('ProvisionsAllDevices');
+  let provType = 'In-House';
+  if (provisionType === 'true') provType = 'In-House';
+  else if (getTaskAllow === 'true') provType = 'Development';
+  else provType = 'Ad-Hoc';
+
+  // Fecha de expiración
+  const expiryStr = getPlistValue('ExpirationDate');
+  let estado = 'Good';
+  if (expiryStr) {
+    const expiry = new Date(expiryStr);
+    if (expiry < new Date()) estado = 'Expired';
+  }
+
+  const appName  = getPlistValue('AppIDName');
+  const bundleId = getPlistValue('application-identifier') || getPlistValue('com.apple.application-identifier');
+
+  return { provType, estado, appName, bundleId };
+}
+
+async function showCertModal() {
   const pwd = document.getElementById('pwdInput').value.trim();
   if (!p12File)  { showErr('Por favor selecciona tu archivo .p12'); return; }
   if (!pwd)       { showErr('Por favor ingresa la contraseña del .p12'); return; }
   if (!mobFile)   { showErr('Por favor selecciona tu archivo .mobileprovision'); return; }
 
-  // Populate modal with file names
-  document.getElementById('modalCertName').textContent = p12File.name;
-  document.getElementById('modalMobName').textContent  = mobFile.name;
+  // Mostrar estado de carga en el botón
+  const btn = document.getElementById('signBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verificando certificado...';
 
-  document.getElementById('certModal').classList.remove('hidden');
+  try {
+    // Parsear P12 de verdad
+    const certInfo = await parseP12(p12File, pwd);
+    const provInfo = await parseMobileProvision(mobFile);
+
+    // Rellenar modal con datos reales
+    document.getElementById('modalCertName').textContent = certInfo.commonName || p12File.name;
+    document.getElementById('modalMobName').textContent  = mobFile.name;
+    document.getElementById('modalCertType').textContent = certInfo.certType;
+    document.getElementById('modalProvType').textContent = provInfo.provType;
+
+    // Estado certificado
+    const certBadge = document.getElementById('modalCertEstado');
+    certBadge.className = certInfo.estado === 'Good' ? 'badge-good' : 'badge-bad';
+    certBadge.innerHTML = `<span class="badge-dot"></span> ${certInfo.estado}`;
+
+    // Estado provisioning
+    const provBadge = document.getElementById('modalProvEstado');
+    provBadge.className = provInfo.estado === 'Good' ? 'badge-good' : 'badge-bad';
+    provBadge.innerHTML = `<span class="badge-dot"></span> ${provInfo.estado}`;
+
+    // Fecha expiración
+    if (certInfo.notAfter) {
+      const dateStr = certInfo.notAfter.toLocaleDateString('es-ES', { year:'numeric', month:'short', day:'numeric' });
+      document.getElementById('modalExpiry').textContent = dateStr;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Firmar e Instalar Ahora';
+    document.getElementById('certModal').classList.remove('hidden');
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Firmar e Instalar Ahora';
+    if (err.message && (err.message.includes('password') || err.message.includes('integrity') || err.message.includes('PKCS#12'))) {
+      showErr('❌ Contraseña incorrecta. Verifica la contraseña del .p12');
+    } else {
+      showErr('❌ Error al leer el certificado: ' + err.message);
+    }
+  }
 }
 
 function closeCertModal() {
