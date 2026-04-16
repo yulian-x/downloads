@@ -1013,7 +1013,7 @@
 
 // ── CONFIG ──────────────────────────────────────────────────
 // URL raw de tu IPA en GitHub (rama main, archivo esign.ipa)
-const IPA_URL = 'https://github.com/yulian-x/downloads/raw/refs/heads/main/esign.ipa';
+const IPA_URL = 'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/esign.ipa';
 
 // Tu dominio de Netlify (o dominio propio)
 const SITE_URL = 'https://TU_SITIO.netlify.app';
@@ -1319,7 +1319,7 @@ function pollStatus(jobId) {
 
       if (job.status === 'done' && job.signedIpaUrl) {
         clearInterval(interval);
-        showInstall(job.signedIpaUrl, jobId);
+        showInstall(job.signedIpaUrl, jobId, job.bundleId, job.appName, job.bundleVersion || '1.0');
       } else if (job.status === 'error') {
         clearInterval(interval);
         alert('Error al firmar: ' + (job.error || 'Desconocido'));
@@ -1332,10 +1332,21 @@ function pollStatus(jobId) {
 }
 
 // Show install step
-function showInstall(signedIpaUrl, jobId) {
+function showInstall(signedIpaUrl, jobId, bundleId, appName, bundleVersion) {
   setStep(4);
 
+  // Fallbacks en caso de que el backend no los devuelva
+  const finalBundleId      = bundleId      || 'esign.com';
+  const finalAppName       = appName       || 'ESign';
+  const finalBundleVersion = bundleVersion || '1.0';
+
+  // URLs de iconos requeridos por Apple para OTA (deben ser HTTPS publicos)
+  const ICON_57  = 'https://kernelevelsign.netlify.app/icon57.png';
+  const ICON_512 = 'https://kernelevelsign.netlify.app/icon512.png';
+
   // Construir el plist (protocolo OTA de Apple)
+  // IMPORTANTE: display-image y full-size-image son obligatorios:
+  // sin ellos iOS muestra icono blanco con nube y rechaza la instalacion silenciosamente.
   const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -1351,17 +1362,33 @@ function showInstall(signedIpaUrl, jobId) {
           <key>url</key>
           <string>${signedIpaUrl}</string>
         </dict>
+        <dict>
+          <key>kind</key>
+          <string>display-image</string>
+          <key>needs-shine</key>
+          <false/>
+          <key>url</key>
+          <string>${ICON_57}</string>
+        </dict>
+        <dict>
+          <key>kind</key>
+          <string>full-size-image</string>
+          <key>needs-shine</key>
+          <false/>
+          <key>url</key>
+          <string>${ICON_512}</string>
+        </dict>
       </array>
       <key>metadata</key>
       <dict>
         <key>bundle-identifier</key>
-        <string>esign.com</string>
+        <string>${finalBundleId}</string>
         <key>bundle-version</key>
-        <string>1.0</string>
+        <string>${finalBundleVersion}</string>
         <key>kind</key>
         <string>software</string>
         <key>title</key>
-        <string>ESign</string>
+        <string>${finalAppName}</string>
       </dict>
     </dict>
   </array>
