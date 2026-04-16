@@ -842,7 +842,7 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span> Bundle ID</div>
             <div class="input-box">
-              <div class="fake-input" style="color:rgba(255,255,255,0.45);font-family:'Exo 2',sans-serif;font-size:0.9rem;padding:12px 14px;">esign.com</div>
+              <div class="fake-input" style="color:rgba(255,255,255,0.45);font-family:'Exo 2',sans-serif;font-size:0.9rem;padding:12px 14px;">p3.xyz.yyyue.esign</div>
             </div>
           </div>
           <div class="field">
@@ -961,7 +961,7 @@
         </div>
         <div class="cert-row">
           <div class="cert-key">Bundle ID</div>
-          <div class="cert-val">esign.com</div>
+          <div class="cert-val">p3.xyz.yyyue.esign</div>
         </div>
         <div class="cert-row">
           <div class="cert-key">Certificado</div>
@@ -1287,7 +1287,7 @@ async function startSigning() {
       p12Url,
       mobUrl,
       password:  pwd,
-      bundleId:  'esign.com',
+      bundleId:  'p3.xyz.yyyue.esign',
       appName:   'ESign',
       status:    'pending',
       createdAt: new Date().toISOString()
@@ -1350,7 +1350,7 @@ function showInstall(signedIpaUrl, jobId, bundleId, appName, bundleVersion) {
   setStep(4);
 
   // Fallbacks en caso de que el backend no los devuelva
-  const finalBundleId      = bundleId      || 'esign.com';
+  const finalBundleId      = bundleId      || 'p3.xyz.yyyue.esign';
   const finalAppName       = appName       || 'ESign';
   const finalBundleVersion = bundleVersion || '1.0';
 
