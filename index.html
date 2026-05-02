@@ -11,7 +11,7 @@
   <!-- Firebase SDK (solo Firestore) -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     // ═══════════════════════════════════════════
     // 🔥 FIREBASE CONFIG (solo Firestore)
@@ -29,7 +29,7 @@
     const db = getFirestore(app);
 
     // Exponer Firestore al scope global
-    window.__fb = { db, collection, addDoc, doc, updateDoc };
+    window.__fb = { db, collection, addDoc, doc, updateDoc, serverTimestamp };
   </script>
 
   <!-- Supabase SDK (Storage) -->
@@ -1305,7 +1305,7 @@ async function startSigning() {
       bundleId:  'p3.xyz.yyyue.esign',
       appName:   'ESign',
       status:    'pending',
-      createdAt: new Date().toISOString()
+      createdAt: fb.serverTimestamp()
     });
 
     animateProgress(100, () => {
