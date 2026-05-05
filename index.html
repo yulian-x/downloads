@@ -1326,7 +1326,7 @@ function pollStatus(jobId) {
   const fb = window.__fb;
   const q  = fb.collection(fb.db, 'sign_jobs');
   let retries = 0;
-  const maxRetries = 60; // 3 minutos max
+  const maxRetries = 120; // 6 minutos max
 
   const interval = setInterval(async () => {
     retries++;
