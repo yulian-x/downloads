@@ -1321,41 +1321,96 @@ async function startSigning() {
   }
 }
 
-// Poll Firestore for job status
+// Poll Firestore via REST API (bypasses adblocker WebChannel blocks)
 function pollStatus(jobId) {
-  const fb = window.__fb;
-  const q  = fb.collection(fb.db, 'sign_jobs');
-  let retries = 0;
-  const maxRetries = 120; // 6 minutos max
+  const PROJECT_ID = 'kernel-level-sign';
+  const API_KEY    = 'AIzaSyBGbTWKjJZY2ifGFHrFf9LDI3Xo5gcu3Gc';
+
+  let retries    = 0;
+  const maxRetries = 120; // 6 minutos max (120 × 3s)
+
+  console.log(`%c[KERNEL] Iniciando polling REST → jobId: ${jobId}`, 'color:#8B2FFF;font-weight:bold');
 
   const interval = setInterval(async () => {
     retries++;
     if (retries > maxRetries) {
       clearInterval(interval);
+      console.error(`[KERNEL] ❌ Timeout tras ${retries} intentos`);
       alert('Tiempo de espera agotado. Por favor intenta de nuevo.');
       location.reload();
       return;
     }
 
+    console.log(`[KERNEL] 🔄 Intento #${retries} — ${new Date().toISOString()}`);
+
     try {
-      // Buscar el job por jobId en Firestore
-      const { getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      const snap = await getDocs(query(q, where('jobId', '==', jobId)));
-      if (snap.empty) return;
+      // Firestore REST API — no WebChannel, no bloqueadores
+      const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery?key=${API_KEY}`;
 
-      const job = snap.docs[0].data();
-      document.getElementById('logText').textContent = job.log || 'Firmando tu app...';
+      const body = {
+        structuredQuery: {
+          from: [{ collectionId: 'sign_jobs' }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'jobId' },
+              op: 'EQUAL',
+              value: { stringValue: jobId }
+            }
+          },
+          limit: 1
+        }
+      };
 
-      if (job.status === 'done' && job.signedIpaUrl) {
-        clearInterval(interval);
-        showInstall(job.signedIpaUrl, jobId, job.bundleId, job.appName, job.bundleVersion || '1.0');
-      } else if (job.status === 'error') {
-        clearInterval(interval);
-        alert('Error al firmar: ' + (job.error || 'Desconocido'));
-        location.reload();
+      const t0  = performance.now();
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        console.warn(`[KERNEL] ⚠️ REST respondió ${res.status}`);
+        return;
       }
+
+      const results = await res.json();
+      const ms = (performance.now() - t0).toFixed(0);
+      console.log(`[KERNEL] ⏱ REST respondió en ${ms}ms`);
+
+      // runQuery devuelve array; el primer elemento tiene .document si existe
+      const docData = results[0]?.document?.fields;
+      if (!docData) {
+        console.warn(`[KERNEL] ⚠️ Job no encontrado todavía`);
+        return;
+      }
+
+      // Extraer campos del formato Firestore REST
+      const status       = docData.status?.stringValue        || '';
+      const log          = docData.log?.stringValue            || 'Firmando tu app...';
+      const signedIpaUrl = docData.signedIpaUrl?.stringValue   || '';
+      const error        = docData.error?.stringValue          || 'Error desconocido';
+      const bundleId     = docData.bundleId?.stringValue       || 'p3.xyz.yyyue.esign';
+      const appName      = docData.appName?.stringValue        || 'ESign';
+      const bundleVersion= docData.bundleVersion?.stringValue  || '1.0';
+
+      console.log(`[KERNEL] 📋 Status: "${status}" | Log: "${log}"`);
+      document.getElementById('logText').textContent = log;
+
+      if (status === 'done' && signedIpaUrl) {
+        clearInterval(interval);
+        console.log(`%c[KERNEL] ✅ ¡Job completado! URL: ${signedIpaUrl}`, 'color:green;font-weight:bold');
+        showInstall(signedIpaUrl, jobId, bundleId, appName, bundleVersion);
+      } else if (status === 'error') {
+        clearInterval(interval);
+        console.error(`[KERNEL] ❌ Job falló:`, error);
+        alert('Error al firmar: ' + error);
+        location.reload();
+      } else {
+        console.log(`[KERNEL] ⏳ En progreso (status: ${status}), next en 3s...`);
+      }
+
     } catch(e) {
-      // silently retry
+      console.error(`[KERNEL] ❌ Error en REST poll (intento #${retries}):`, e.message);
     }
   }, 3000);
 }
